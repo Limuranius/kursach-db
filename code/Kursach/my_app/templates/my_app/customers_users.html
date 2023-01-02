@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}
+Аккаунты заказчиков
+{% endblock %}
+
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{% static 'my_app/table.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<h1>Аккаунты заказчиков</h1>
+<table>
+    <thead>
+    <th>Логин</th>
+    <th>Пароль</th>
+    <th>Код заказчика</th>
+    </thead>
+    <tbody>
+    {% for obj in objects %}
+    <tr>
+        {% for field in obj %}
+        <td>{{ field }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

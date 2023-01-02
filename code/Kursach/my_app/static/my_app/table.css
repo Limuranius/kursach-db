@@ -1,0 +1,23 @@
+table {
+	border-collapse: collapse;
+	min-width: 400px;
+	max-width: auto;
+}
+
+table thead {
+	text-align: left;
+	background-color: #999999;
+}
+
+table tbody {
+	background-color: #CCCC99;
+}
+
+table td,
+table th {
+	padding: 10px;
+}
+
+table tbody td {
+	border-bottom: 1px solid black;
+}

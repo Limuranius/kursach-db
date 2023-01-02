@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        {% block title %}
+            Base
+        {% endblock %}
+    </title>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'base.css' %}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <nav class="menu">
+        <a class="menu-item" href="{% url 'index_url' %}">На главную</a>
+        <a class="menu-item" href="{% url 'providers_url' %}">Поставщики</a>
+        <a class="menu-item" href="{% url 'flowers_url' %}">Цветы</a>
+        <a class="menu-item" href="{% url 'customers_url' %}">Заказчики</a>
+        <a class="menu-item" href="{% url 'contracts_url' %}">Договоры</a>
+        <a class="menu-item" href="{% url 'orders_url' %}">Заказы</a>
+        <a class="menu-item" href="#">Сотрудники</a>
+        <a class="menu-item" href="#">Заказчики(пользователи)</a>
+    </nav>
+
+    <div class="content">
+        {% block content %}
+            No content :(
+        {% endblock %}
+        <form action="{% url 'commit_url' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Commit">
+            <input type="hidden" name="curr_path" value="{{ request.path }}">
+        </form>
+        <form action="{% url 'rollback_url' %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Rollback">
+            <input type="hidden" name="curr_path" value="{{ request.path }}">
+        </form>
+    </div>
+</body>
+</html>

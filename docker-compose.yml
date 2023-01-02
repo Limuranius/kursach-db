@@ -1,0 +1,29 @@
+services:
+  database:
+    build: ./database/
+    volumes:
+      - kursach-db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: aboba
+      MYSQL_DATABASE: kursach
+    ports:
+      - 3306:3306
+    healthcheck:  # Проверка на полное включение базы данных
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+    
+  python-app:
+    build: ./code
+#    command: sh -c "sleep 10s; python3 code.py"
+    volumes:
+      - ./code/Kursach:/app/Kursach
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+
+
+volumes:
+  kursach-db:

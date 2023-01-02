@@ -1,0 +1,30 @@
+body {
+	background-color: #336699;
+	margin: 0;
+	font-family: "Comic Sans MS", "Comic Sans";
+}
+
+.menu {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	padding: 5px;
+}
+
+.menu-item {
+	display: block;
+	padding: 5px;
+	background-color: #3399CC;
+	text-decoration: none;
+	color: white;
+}
+
+.menu-item:hover {
+	background-color: #99CCFF;
+}
+
+.content {
+	width: 80%;
+	margin: auto;
+	background-color: #00CCFF;
+}

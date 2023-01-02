@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}
+Контракты
+{% endblock %}
+
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{% static 'my_app/table.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<h1>Договоры</h1>
+<form action="{% url 'create_contract_url' %}">
+    <input type="submit" value="Создать">
+</form>
+<table>
+    <thead>
+    <th>Код договора</th>
+    <th>Код заказчика</th>
+    <th>Дата регистрации</th>
+    <th>Дата исполнения</th>
+    </thead>
+    <tbody>
+    {% for obj in objects %}
+    <tr>
+        {% for field in obj %}
+        <td>{{ field }}</td>
+        {% endfor %}
+        <td>
+            <form action="{% url 'contracts_url' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Удалить</button>
+                <input type="hidden" name="contract_id" value="{{obj.contract_id}}">
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
