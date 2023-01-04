@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect
 from .models import Database, BaseDBModel
 from django.views import View
 from . import forms
+from .mixins import UserStatusRequiredMixin
+from .user_manager import UserManager
+from .model_objects import UserStatus
+from django.core.exceptions import ValidationError
 
 
 class IndexView(View):
@@ -9,160 +13,156 @@ class IndexView(View):
         return render(request, "my_app/index.html")
 
 
-class BaseTableView(View):
+class BaseTableView(UserStatusRequiredMixin, View):
     model: BaseDBModel
     template_path: str
+    delete_request_fields: list[str]
+    table_url: str
+    can_edit_statuses: list[UserStatus]
 
     def get(self, request):
         objects = self.model.all()
-        return render(request, self.template_path, context={"objects": objects})
+        user_status = UserStatus(request.COOKIES.get("user_status"))
+        can_edit = user_status in self.can_edit_statuses
+        return render(request, self.template_path, context={"objects": objects, "can_edit": can_edit})
+
+    def post(self, request):
+        data = [request.POST[field] for field in self.delete_request_fields]
+        self.model.remove(*data)
+        return redirect(self.table_url)
 
 
 class ProvidersView(BaseTableView):
     model = Database.Provider
     template_path = "my_app/providers.html"
-
-    def post(self, request):
-        provider_id = request.POST["provider_id"]
-        address = request.POST["address"]
-        self.model.remove(provider_id, address)
-        return redirect("providers_url")
-
-
-class ProviderCreate(View):
-    def get(self, request):
-        form = forms.ProviderForm()
-        return render(request, "my_app/create/create_provider.html", {"form": form})
-
-    def post(self, request):
-        form = forms.ProviderForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            address = form.cleaned_data["address"]
-            Database.Provider.create(name, address)
-        else:
-            return render(request, "my_app/create/create_provider.html", {"form": form})
-        return redirect("providers_url")
+    delete_request_fields = ["provider_id", "address"]
+    table_url = "providers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER, UserStatus.ACCOUNTANT]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER]
 
 
 class FlowersView(BaseTableView):
     model = Database.Flower
     template_path = "my_app/flowers.html"
-
-    def post(self, request):
-        flower_id = request.POST["flower_id"]
-        self.model.remove(flower_id)
-        return redirect("flowers_url")
-
-
-class FlowerCreate(View):
-    def get(self, request):
-        form = forms.FlowerForm()
-        form.set_providers(Database.Provider.all_names())
-        return render(request, "my_app/create/create_flower.html", {"form": form})
-
-    def post(self, request):
-        form = forms.FlowerForm(request.POST)
-        form.set_providers(Database.Provider.all_names())
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            price = form.cleaned_data["price"]
-            provider_name = form.cleaned_data["provider_name"]
-            provider_id = Database.Provider.get_provider_id(provider_name)
-            Database.Flower.create(name, price, provider_id)
-        else:
-            return render(request, "my_app/create/create_flower.html", {"form": form})
-        return redirect("flowers_url")
+    delete_request_fields = ["flower_id"]
+    table_url = "flowers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER, UserStatus.ACCOUNTANT, UserStatus.PURCHASE_MANAGER,
+                        UserStatus.DELIVERY_MANAGER, UserStatus.CUSTOMER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER]
 
 
 class CustomersView(BaseTableView):
     model = Database.Customer
     template_path = "my_app/customers.html"
-
-    def post(self, request):
-        customer_id = request.POST["customer_id"]
-        phone = request.POST["phone"]
-        self.model.remove(customer_id, phone)
-        return redirect("customers_url")
-
-
-class CustomerCreate(View):
-    def get(self, request):
-        form = forms.CustomerForm()
-        return render(request, "my_app/create/create_customer.html", {"form": form})
-
-    def post(self, request):
-        form = forms.CustomerForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data["name"]
-            phone = form.cleaned_data["phone"]
-            address = form.cleaned_data["address"]
-            Database.Customer.create(name, phone, address)
-        else:
-            return render(request, "my_app/create/create_customer.html", {"form": form})
-        return redirect("customers_url")
+    delete_request_fields = ["customer_id", "phone"]
+    table_url = "customers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER, UserStatus.DELIVERY_MANAGER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER]
 
 
 class ContractsView(BaseTableView):
     model = Database.Contract
     template_path = "my_app/contracts.html"
-
-    def post(self, request):
-        contract_id = request.POST["contract_id"]
-        self.model.remove(contract_id)
-        return redirect("contracts_url")
-
-
-class ContractCreate(View):
-    def get(self, request):
-        form = forms.ContractForm()
-        form.set_customers(Database.Customer.all_names())
-        return render(request, "my_app/create/create_contract.html", {"form": form})
-
-    def post(self, request):
-        form = forms.ContractForm(request.POST)
-        form.set_customers(Database.Customer.all_names())
-        if form.is_valid():
-            customer_name = form.cleaned_data["customer_name"]
-            register_date = form.cleaned_data["register_date"]
-            execution_date = form.cleaned_data["execution_date"]
-            customer_id = Database.Customer.get_customer_id(customer_name)
-            Database.Contract.create(customer_id, register_date, execution_date)
-        else:
-            return render(request, "my_app/create/create_contract.html", {"form": form})
-        return redirect("contracts_url")
+    delete_request_fields = ["contract_id"]
+    table_url = "contracts_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER, UserStatus.ACCOUNTANT, UserStatus.PURCHASE_MANAGER,
+                        UserStatus.DELIVERY_MANAGER, UserStatus.CUSTOMER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER, UserStatus.CUSTOMER]
 
 
 class OrdersView(BaseTableView):
     model = Database.Order
     template_path = "my_app/orders.html"
+    delete_request_fields = ["order_id"]
+    table_url = "contracts_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER, UserStatus.ACCOUNTANT, UserStatus.PURCHASE_MANAGER,
+                        UserStatus.DELIVERY_MANAGER, UserStatus.CUSTOMER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER, UserStatus.CUSTOMER]
 
-    def post(self, request):
-        order_id = request.POST["order_id"]
-        self.model.remove(order_id)
-        return redirect("contracts_url")
+
+class EmployeesView(BaseTableView):
+    model = Database.Employee
+    template_path = "my_app/employees.html"
+    delete_request_fields = ["login"]
+    table_url = "employees_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER]
 
 
-class OrderCreate(View):
+class CustomersUsersView(BaseTableView):
+    model = Database.CustomerUser
+    template_path = "my_app/customers_users.html"
+    delete_request_fields = ["login"]
+    table_url = "customers_users_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+    can_edit_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class BaseCreateView(UserStatusRequiredMixin, View):
+    form_class: type[forms.BaseCreateForm]
+    template_path: str
+    redirect_url: str
+
     def get(self, request):
-        form = forms.OrderForm()
-        form.set_contracts(Database.Contract.all_ids())
-        form.set_flowers(Database.Flower.all_names())
-        return render(request, "my_app/create/create_order.html", {"form": form})
+        form = self.form_class()
+        return render(request, self.template_path, {"form": form})
 
     def post(self, request):
-        form = forms.OrderForm(request.POST)
-        form.set_contracts(Database.Contract.all_ids())
-        form.set_flowers(Database.Flower.all_names())
+        form = self.form_class(request.POST)
         if form.is_valid():
-            contract_id = form.cleaned_data["contract_id"]
-            flower_name = form.cleaned_data["flower_name"]
-            quantity = form.cleaned_data["quantity"]
-            flower_id = Database.Flower.get_flower_id(flower_name)
-            Database.Order.create(contract_id, flower_id, quantity)
+            form.save_to_db()
+            return redirect(self.redirect_url)
         else:
-            return render(request, "my_app/create/create_order.html", {"form": form})
-        return redirect("orders_url")
+            return render(request, self.template_path, {"form": form})
+
+
+class ProviderCreateView(BaseCreateView):
+    form_class = forms.ProviderCreateForm
+    template_path = "my_app/create/create_provider.html"
+    redirect_url = "providers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class FlowerCreateView(BaseCreateView):
+    form_class = forms.FlowerCreateForm
+    template_path = "my_app/create/create_flower.html"
+    redirect_url = "flowers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class CustomerCreateView(BaseCreateView):
+    form_class = forms.CustomerCreateForm
+    template_path = "my_app/create/create_customer.html"
+    redirect_url = "customers_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class ContractCreateView(BaseCreateView):
+    form_class = forms.ContractCreateForm
+    template_path = "my_app/create/create_contract.html"
+    redirect_url = "contracts_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class OrderCreateView(BaseCreateView):
+    form_class = forms.OrderCreateForm
+    template_path = "my_app/create/create_order.html"
+    redirect_url = "orders_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class RegisterEmployeeForm(BaseCreateView):
+    form_class = forms.EmployeeRegisterForm
+    template_path = "my_app/users/register_employee.html"
+    redirect_url = "employees_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
+
+
+class RegisterCustomerForm(BaseCreateView):
+    form_class = forms.CustomerRegisterForm
+    template_path = "my_app/users/register_customer.html"
+    redirect_url = "customers_users_url"
+    allowed_statuses = [UserStatus.HEAD_MANAGER]
 
 
 class Commit(View):
@@ -177,3 +177,31 @@ class Rollback(View):
         Database.connection.rollback()
         prev_path = request.POST["curr_path"]
         return redirect(prev_path)
+
+
+class LoginView(View):
+    def get(self, request):
+        form = forms.LoginForm()
+        return render(request, "my_app/users/login.html", {"form": form})
+
+    def post(self, request):
+        form = forms.LoginForm(request.POST)
+        if form.is_valid():
+            login = form.cleaned_data["login"]
+            password = form.cleaned_data["password"]
+            try:
+                user_status = UserManager.get_status(login, password)
+            except ValidationError as error:
+                form.add_error(None, error)
+            else:
+                response = redirect("index_url")
+                response.set_cookie("user_status", user_status.value)
+                return response
+        return render(request, "my_app/users/login.html", {"form": form})
+
+
+class ExitView(View):
+    def get(self, request):
+        response = redirect("index_url")
+        response.delete_cookie("user_status")
+        return response
