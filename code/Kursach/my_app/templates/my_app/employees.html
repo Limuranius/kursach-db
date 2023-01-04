@@ -16,18 +16,27 @@
 <h1>Сотрудники</h1>
 <table>
     <thead>
-    <th>Логин</th>
-    <th>Пароль</th>
-    <th>Должность</th>
+        <tr>
+            <th>Логин</th>
+            <th>Пароль</th>
+            <th>Должность</th>
+        </tr>
     </thead>
     <tbody>
-    {% for obj in objects %}
-    <tr>
-        {% for field in obj %}
-        <td>{{ field }}</td>
+        {% for obj in objects %}
+        <tr>
+            {% for field in obj %}
+            <td>{{ field }}</td>
+            {% endfor %}
+            <td>
+                <form action="{% url 'employees_url' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Удалить</button>
+                    <input type="hidden" name="login" value="{{obj.login}}">
+                </form>
+            </td>
+        </tr>
         {% endfor %}
-    </tr>
-    {% endfor %}
     </tbody>
 </table>
 {% endblock %}
