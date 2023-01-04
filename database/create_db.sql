@@ -77,23 +77,3 @@ CREATE TABLE customer_user (
 	PRIMARY KEY (login),
 	FOREIGN KEY (customer_id) REFERENCES customer_name(customer_id)
 );
-
-INSERT INTO employee VALUES(
-	"admin", "admin123", "manager"
-);
-
-INSERT INTO employee VALUES(
-	"worker1", "321", "worker"
-);
-
-INSERT INTO provider_name(name) VALUES(
-	"provider1"
-);
-
-INSERT INTO provider_address VALUES(
-	1, "Street1"
-);
-
-INSERT INTO provider_address VALUES(
-	1, "Street2"
-);
