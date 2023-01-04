@@ -1,5 +1,15 @@
 from dataclasses import dataclass
 import datetime
+from enum import Enum
+
+
+class UserStatus(Enum):
+    HEAD_MANAGER = "Head manager"
+    ACCOUNTANT = "Accountant"
+    PURCHASE_MANAGER = "Purchase manager"
+    DELIVERY_MANAGER = "Delivery manager"
+    CUSTOMER = "Customer"
+    ANONYMOUS = None
 
 
 @dataclass
@@ -77,4 +87,32 @@ class OrderObj:
             self.contract_id,
             self.flower_id,
             self.quantity
+        ])
+
+
+@dataclass
+class EmployeeObj:
+    login: str
+    password: str
+    job_title: str
+
+    def __iter__(self):
+        return iter([
+            self.login,
+            self.password,
+            self.job_title,
+        ])
+
+
+@dataclass
+class CustomerUserObj:
+    login: str
+    password: str
+    customer_id: int
+
+    def __iter__(self):
+        return iter([
+            self.login,
+            self.password,
+            self.customer_id,
         ])
