@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}
+Регистрация сотрудника
+{% endblock %}
+
+
+{% block styles %}
+
+{% endblock %}
+
+
+{% block content %}
+<h1>Войти</h1>
+
+<form action="{% url 'login_url' %}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Войти">
+</form>
+{% endblock %}

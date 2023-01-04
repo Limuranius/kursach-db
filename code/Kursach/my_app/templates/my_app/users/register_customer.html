@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}
+Регистрация заказчика
+{% endblock %}
+
+
+{% block styles %}
+
+{% endblock %}
+
+
+{% block content %}
+<h1>Регистрация заказчика</h1>
+
+<form action="{% url 'register_customer_url' %}" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Добавить">
+</form>
+{% endblock %}
