@@ -21,8 +21,12 @@
         <a class="menu-item" href="{% url 'customers_url' %}">Заказчики</a>
         <a class="menu-item" href="{% url 'contracts_url' %}">Договоры</a>
         <a class="menu-item" href="{% url 'orders_url' %}">Заказы</a>
-        <a class="menu-item" href="#">Сотрудники</a>
-        <a class="menu-item" href="#">Заказчики(пользователи)</a>
+        <a class="menu-item" href="{% url 'employees_url' %}">Сотрудники</a>
+        <a class="menu-item" href="{% url 'customers_users_url' %}">Заказчики(пользователи)</a>
+        <a class="menu-item" href="{% url 'login_url' %}">Войти</a>
+        <a class="menu-item" href="{% url 'register_employee_url' %}">Зарегистрировать сотрудника</a>
+        <a class="menu-item" href="{% url 'register_customer_url' %}">Зарегистировать заказчика</a>
+        <a class="menu-item" href="{% url 'exit_url' %}">Выйти</a>
     </nav>
 
     <div class="content">
