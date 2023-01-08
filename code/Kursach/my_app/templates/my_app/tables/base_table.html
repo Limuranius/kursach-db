@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'my_app/table.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<h1>{{ title }}</h1>
+<form action="{% url create_url %}">
+    <input type="submit" value="Создать">
+</form>
+<table>
+    <thead>
+        <tr>
+            {% for header in table_headers %}
+                <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for obj in objects %}
+        <tr>
+            {% for field in obj %}
+            <td>{{ field }}</td>
+            {% endfor %}
+            <td>
+                <form action="{% url table_url %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Удалить</button>
+                    {% for field in request_unique_fields %}
+                        <input type="hidden" name="{{field}}" value="{{obj | getattr:field}}">
+                    {% endfor %}
+                </form>
+            </td>
+            <td>
+                <form action="{% url edit_url %}" method="get">
+                    {% csrf_token %}
+                    <button type="submit">Изменить</button>
+                    {% for field in request_unique_fields %}
+                        <input type="hidden" name="{{field}}" value="{{obj | getattr:field}}">
+                    {% endfor %}
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
