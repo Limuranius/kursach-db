@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+
+{% block styles %}
+
+{% endblock %}
+
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<form action="{% url edit_url %}" method="post">
+    {% csrf_token %}
+    {% for name, value in primary_params.items %}
+        <input type="hidden" name="{{name}}" value="{{value}}">
+    {% endfor %}
+    {{ form.as_p }}
+    <input type="submit" value="Изменить">
+</form>
+{% endblock %}
